@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EUsage</string>
+    <string name="Save">Save</string>
+    <string name="Usage">Usage</string>
+    <string name="Gas">Gas</string>
+    <string name="Power">Power</string>
+    <string name="Water">Water</string>
+    <string name="set_preferences">Preferences</string>
+    <string name="usage_saved_to_phone">Usage saved to phone</string>
+    <string name="type_of_usage">Type of usage</string>
+    <string name="usagelist">Usagelist</string>
+    <string name="sync">Sync</string>
+    <string name="prefs">Preferences</string>
+    <string name="selectAll">Select all</string>
+    <string name="deleteSelected">Delete selected</string>
+	<string name="SyncNow">Syncronize now</string>
+	<string name="syncurl_label">Sync URL</string>
+	<string name="csvExport">CSV Export</string>
+	<string name="Exporting_database">Exporting database&#8230;</string>
+	<string name="Export_done">Export done</string>
+	<string name="Export_failed">Export failed</string>
+	<string name="Export_file_not_found">Export file not found</string>
+	<string name="Pick_the_date">Pick the date</string>
+	<string name="Please_define_remoteurl_in_prefs">Please define remoteurl in prefs</string>
+	<string name="Sync_done">Sync done</string>
+</resources>

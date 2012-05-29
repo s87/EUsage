@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <PreferenceCategory
+                android:title="Remote Sync">
+        <EditTextPreference
+                android:name="remoteUrl"
+                android:summary="Define the HTTP-Url to your store"
+                android:defaultValue="http://"
+                android:title="Remote sync"
+                android:key="httpupdateurl" />
+         <CheckBoxPreference
+                android:title="Automatic sync"
+                android:defaultValue="false"
+                android:summary="Sync after click on save button"
+                android:key="syncOnSave" />
+
+        </PreferenceCategory>
+</PreferenceScreen>

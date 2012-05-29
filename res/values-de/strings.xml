@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EUsage</string>
+    <string name="Save">Speichern</string>
+    <string name="Usage">Verbrauch</string>
+    <string name="Gas">Gas</string>
+    <string name="Power">Strom</string>
+    <string name="Water">Wasser</string>
+    <string name="set_preferences">Einstellungen</string>
+    <string name="usage_saved_to_phone">Der Wert wurde gespeichert</string>
+    <string name="type_of_usage">Verbrauchstyp</string>
+    <string name="prefs">Einstellungen</string>
+    <string name="usagelist">Einträge zeigen</string>
+    <string name="sync">Sync</string>
+    <string name="selectAll">Alle auswählen</string>
+    <string name="deleteSelected">Ausgewählte löschen</string>
+    <string name="SyncNow">Jetzt syncronisieren</string>
+    <string name="syncurl_label">Sync URL</string>
+    <string name="csvExport">CSV Export</string>
+    <string name="Exporting_database">Exportiere Datenbank&#8230;</string>
+	<string name="Export_done">Export fertig</string>
+	<string name="Export_failed">Export fehlgeschlagen</string>
+	<string name="Export_file_not_found">Export Datei nicht gefunden</string>
+	<string name="Pick_the_date">Zeitpunkt des Eintrages</string>
+	<string name="Please_define_remoteurl_in_prefs">Please define remoteurl in prefs</string>
+	<string name="Sync_done">Synchronisation fertig</string>
+</resources>
