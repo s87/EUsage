@@ -22,6 +22,7 @@ public class Statistics {
 	{
 		this.activity = activity;
 		dbHelper = new DatabaseHelper(this.activity);
+		this.refresh();
 	}
 	
 	public UsageItem getUsageForType( String type )
