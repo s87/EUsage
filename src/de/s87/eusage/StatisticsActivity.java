@@ -47,7 +47,6 @@ public class StatisticsActivity extends Activity {
         String[] types = stats.getUsageTypes();
         for( int i=0; i < types.length; i++ )
         {
-        	System.out.println("HUHU "+i);
         	TableRow row = new TableRow(this);
         	row.setLayoutParams(rowParams);
         	TextView type = new TextView(this);

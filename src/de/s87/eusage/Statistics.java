@@ -35,6 +35,7 @@ public class Statistics {
 	
 	public String[] getUsageTypes()
 	{
+		this.refresh();
 		String[] arr1 = new String[typeList.size()];
 		Object[] keys = typeList.keySet().toArray();
         for(int i=0;i<keys.length;i++) {
@@ -120,7 +121,9 @@ public class Statistics {
 		
 		public Boolean isComplete()
 		{
-			return( valueCount >= 2 );
+			if( lastDateUsage == null || lowDateUsage == null )
+				return false;
+			return true;
 		}
 		
 		@Override
@@ -132,14 +135,13 @@ public class Statistics {
 		public Double getUsageForDay()
 		{
 			Double valInPeriod;
-			valInPeriod = (lastDateUsage-lowDateUsage);
-			if( this.isComplete() == false || valInPeriod < 0 )
+
+			if( this.isComplete() == false )
 				return 0.0;
 
-			Timestamp tsLastdate = new Timestamp(lastDate);
-			Timestamp tsLowdate = new Timestamp(lowDate);
-			Calendar cal = Calendar.getInstance();
-			cal.setTimeInMillis(lowDate);
+			valInPeriod = (lastDateUsage-lowDateUsage);
+			if( valInPeriod < 0 )
+				return 0.0;
 
 			Long days = daysDiff(lowDate,lastDate);
 			Double dailyUsage = 0.0;

@@ -133,14 +133,6 @@ public class EUsageActivity extends Activity {
                 Intent intent = new Intent(getBaseContext(), UsageListActivity.class);
                 startActivity(intent);
                 return true;
-            case R.id.sync:
-                Intent syncIntent = new Intent(getBaseContext(), SyncActivity.class);
-                startActivity(syncIntent);
-                return true;
-            case R.id.csvexport:
-                Intent csvIntent = new Intent(getBaseContext(), CSVExportActivity.class);
-                startActivity(csvIntent);
-                return true;
             case R.id.properties:
                 Intent settingsActivity = new Intent(getBaseContext(),
                         Preferences.class);

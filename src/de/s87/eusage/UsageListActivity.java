@@ -15,6 +15,7 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -178,12 +179,19 @@ public class UsageListActivity extends ListActivity {
             case R.id.deleteSelected:
             	deleteSelected();
                 return true;
+            case R.id.sync:
+                startActivity(new Intent(getBaseContext(), SyncActivity.class));
+                return true;
             case R.id.fillDummies:
             	fillDummies();
             	return true;
             case R.id.csvimport:
             	callCsvImport();
             	return true;
+            case R.id.csvexport:
+                Intent csvIntent = new Intent(getBaseContext(), CSVExportActivity.class);
+                startActivity(csvIntent);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

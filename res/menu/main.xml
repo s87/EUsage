@@ -2,10 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/usagelist"
           android:title="@string/usagelist"/>
-	<item android:id="@+id/sync"
-          android:title="@string/sync"/>
-	<item android:id="@+id/csvexport"
-          android:title="@string/csvExport"/>
     <item android:id="@+id/properties"
           android:title="@string/prefs" />
     <item android:id="@+id/statistics"
