@@ -1,7 +1,8 @@
 package de.s87.eusage;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Calendar;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
@@ -26,101 +27,25 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-// http://www.kaloer.com/android-preferences
-
 public class EUsageActivity extends Activity {
-    /** Called when the activity is first created. */
 
 	TextView usageText;
 	
 	private static final String TAG = "EUsageActivity";
 	static final int DATE_DIALOG_ID = 0;
-	private boolean autoSync = false;
-	
-	Date inputDate = new Date();
-    private int mYear, mMonth, mDay;
+
+	String usageFromDatabase = null;
+	Calendar cal = Calendar.getInstance();
+
+    private int mYear = cal.get(Calendar.YEAR);
+    private int mMonth = cal.get(Calendar.MONTH);
+    private int mDay = cal.get(Calendar.DAY_OF_MONTH);
     
     Button pickDate;
     
 	SQLiteDatabase database = null; 
 	SharedPreferences prefs = null;
-	
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        // To get the httpupdateurl etc.
-        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        database = dbHelper.getWritableDatabase();
-		
-        setContentView(R.layout.main);
-        
-        // Capture our button from layout
-        Button saveButton = (Button)findViewById(R.id.savebutton);
-        pickDate = (Button)findViewById(R.id.pickDate);
-        
-        // add a click listener to the button
-        pickDate.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                showDialog(DATE_DIALOG_ID);
-            }
-        });
 
-        // get the current date
-        mYear = inputDate.getYear()+1900;//c.get(Calendar.YEAR);
-        mMonth = inputDate.getMonth();//c.get(Calendar.MONTH);
-        mDay = inputDate.getDate();// c.get(Calendar.DAY_OF_MONTH);
-        updateDisplay();
-        usageText = (TextView)findViewById(R.id.evalue);
-        
-        // Register the onClick listener with the implementation above
-        saveButton.setOnClickListener(saveButtonListener);
-        
-        RadioGroup radGrp = (RadioGroup)findViewById(R.id.usageType);
-        radGrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-          public void onCheckedChanged(RadioGroup arg0, int id) {
-        	  
-        	  String type = "";
-            switch (id) {
-            case -1:
-              break;
-            case R.id.gas:
-            	type = "gas";
-              break;
-            case R.id.power:
-            	type = "power";
-              break;
-            case R.id.water:
-            	type = "water";
-              break;
-            default:
-              break;
-            }
-            
-            if( type != "" && (usageText.getText().toString().isEmpty()) )
-            {
-            	try
-            	{
-            		Cursor cursor = database.rawQuery("SELECT max(usage) FROM usage WHERE type='"+type+"'",null);
-            		if( cursor.moveToFirst() )
-            		{
-            			usageText.setText(""); // to set the cursor at end of textview
-            			usageText.append(Double.toString(cursor.getDouble(0)));
-            			usageText.requestFocus();
-            			cursor.close();
-            		}
-            	}
-            	catch( SQLException e )
-            	{
-            		Log.e(TAG,e.getMessage());
-            	}
-            }
-          }
-        });        
-    }
-    
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
@@ -134,11 +59,11 @@ public class EUsageActivity extends Activity {
     
     // updates the date we display in the TextView
     private void updateDisplay() {
-    	inputDate.setDate(mDay);
-    	inputDate.setYear(mYear);
-    	inputDate.setMonth(mMonth);
+    	cal.set(Calendar.YEAR, mYear);
+    	cal.set(Calendar.MONTH, mMonth);
+    	cal.set(Calendar.DAY_OF_MONTH, mDay);    	
         SimpleDateFormat f = new SimpleDateFormat();
-        pickDate.setText(f.format(inputDate));
+    	pickDate.setText(f.format(cal.getTime()));
     }
     
     // the callback received when the user "sets" the date in the dialog
@@ -155,6 +80,7 @@ public class EUsageActivity extends Activity {
             };
 
     private OnClickListener saveButtonListener = new OnClickListener() {
+    	@Override
         public void onClick(View v) {
         	
             RadioButton gas = (RadioButton)findViewById(R.id.gas);
@@ -170,52 +96,22 @@ public class EUsageActivity extends Activity {
             	type = "water";
             else
             	return;
-            
+
             if( usageText.getText().equals("") )
             	return;
 
-            try
+            ItemModel model = new ItemModel(EUsageActivity.this);
+            
+        	Timestamp ts = new Timestamp(cal.getTime().getTime());
+        	Long theTimestamp = ts.getTime();
+            if( model.addItem(type, usageText.getText().toString(), Long.toString(theTimestamp)) )
             {
-            	database.execSQL("INSERT INTO usage "
-                        +"(type,usage,cdate,synced)" 
-                        +"VALUES ('"+type+"',"
-                        +usageText.getText().toString()+","
-                        +inputDate.getTime()+",0)");
+            	usageFromDatabase = usageText.getText().toString();
                 Toast toast = Toast.makeText(
                 		getApplicationContext(), 
                 		getString(R.string.usage_saved_to_phone),
                 		Toast.LENGTH_LONG);
-                usageText.setText("");
-            	toast.show();
-            }
-            catch( SQLException e )
-            {
-            	Log.d(TAG,"SQL-Error: "+e.getMessage());
-            	return;
-            }
-
-            autoSync = prefs.getBoolean("syncOnSave", false);
-            if( autoSync )
-            {
-            	String remoteSyncUrl=prefs.getString("httpupdateurl","");
-            	if( !remoteSyncUrl.isEmpty() &&
-            			!remoteSyncUrl.equals("http://") )
-            	{
-            		try
-            		{
-            			HTTPSyncronizer syncer = new HTTPSyncronizer( getApplicationContext(), database );
-                		if( syncer.sync(remoteSyncUrl) )
-                		{
-                			Toast.makeText(getApplicationContext(), "Sync done", Toast.LENGTH_LONG).show();
-                		}
-            		}
-            		catch( HTTPSyncronizerException e )
-            		{
-            			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            		}
-            		
-
-            	}
+                toast.show();
             }
         }
     };
@@ -253,12 +149,92 @@ public class EUsageActivity extends Activity {
                 return super.onOptionsItemSelected(item);
         }
      }
-    
+
     @Override
-    public void onDestroy()
-    {
-    	database.close();
-    	super.onDestroy();
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // To get the httpupdateurl etc.
+        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        database = dbHelper.getWritableDatabase();
+
+        setContentView(R.layout.input);
+
+        // Capture our button from layout
+        Button saveButton = (Button)findViewById(R.id.savebutton);
+        if( saveButton == null )
+        	System.err.println("NIX SAVEBUTTON");
+        pickDate = (Button)findViewById(R.id.pickDate);
+        
+        // add a click listener to the button
+        pickDate.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                showDialog(DATE_DIALOG_ID);
+            }
+        });
+
+       	mYear = cal.get(Calendar.YEAR);
+       	mMonth = cal.get(Calendar.MONTH);
+       	mDay = cal.get(Calendar.DAY_OF_MONTH);
+ 
+       	updateDisplay();
+       
+        usageText = (TextView)findViewById(R.id.evalue);
+
+        // Register the onClick listener with the implementation above
+        saveButton.setOnClickListener( saveButtonListener );
+        
+        RadioGroup radGrp = (RadioGroup)findViewById(R.id.usageType);
+        radGrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+          public void onCheckedChanged(RadioGroup arg0, int id) {
+        	  
+        	  String type = "";
+            switch (id) {
+            case -1:
+              break;
+            case R.id.gas:
+            	type = "gas";
+              break;
+            case R.id.power:
+            	type = "power";
+              break;
+            case R.id.water:
+            	type = "water";
+              break;
+            default:
+              break;
+            }
+            
+            if( type != "" && ( usageText.getText().toString().isEmpty() || 
+            		usageText.getText().toString().equals(usageFromDatabase) ) )
+            {
+            	try
+            	{
+            		Cursor cursor = database.rawQuery("SELECT max(usage) FROM usage WHERE type='"+type+"'",null);
+            		if( cursor.moveToFirst() )
+            		{
+            			usageText.setText(""); // to set the cursor at end of textview
+            			usageText.append(Double.toString(cursor.getDouble(0)));
+            			usageText.requestFocus();
+            			usageFromDatabase = usageText.getText().toString();
+            			cursor.close();
+            		}
+            	}
+            	catch( SQLException e )
+            	{
+            		Log.e(TAG,e.getMessage());
+            	}
+            }
+          }
+        });
     }
-    
+
+	@Override
+	public void onDestroy() {
+		database.close();
+		super.onDestroy();
+	}
+
 }

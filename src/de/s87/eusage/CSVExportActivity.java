@@ -9,12 +9,14 @@ import java.io.PrintWriter;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,10 +25,10 @@ import android.widget.Toast;
 
 public class CSVExportActivity extends Activity {
 
-	Button insetbt, viewbt;
+	Button insetbt, exportButton;
 	EditText csvResult;
 	File exportDir;
-	String exportFilename = "eusage.csv";
+	String exportFilename = null;
 	private static final String TAG = "CSVExportActivity";
 	
 	@Override
@@ -34,16 +36,19 @@ public class CSVExportActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.csvexport);
 
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		exportFilename = prefs.getString("csvFilename",null);
+
 		csvResult = (EditText) findViewById(R.id.editText1);
 		insetbt = (Button) findViewById(R.id.bt1);
-		viewbt = (Button) findViewById(R.id.bt2);
+		exportButton = (Button) findViewById(R.id.bt2);
 
 		exportDir = new File(
 				Environment.getExternalStorageDirectory(), "");
-		
+
 		try
 		{
-			viewbt.setOnClickListener(new View.OnClickListener() {
+			exportButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					try {
@@ -135,7 +140,7 @@ public class CSVExportActivity extends Activity {
 					pw.append("\""+curCSV.getString(0) +"\","+
 							"\""+curCSV.getString(1) +"\","+
 							"\""+curCSV.getString(2) +"\","+
-							"\""+curCSV.getString(3) +"\"\n");					
+							"\""+curCSV.getString(3) +"\"\n");
 				}
 				
 				pw.close();
@@ -169,7 +174,7 @@ public class CSVExportActivity extends Activity {
 			if (success)
 			{
 				Toast.makeText(CSVExportActivity.this,
-								getString(R.string.Export_done),
+								getString(R.string.Export_done, exportFilename),
 								Toast.LENGTH_SHORT).show();
 				fillTextField();
 			}

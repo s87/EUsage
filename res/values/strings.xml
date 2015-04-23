@@ -18,10 +18,18 @@
 	<string name="syncurl_label">Sync URL</string>
 	<string name="csvExport">CSV Export</string>
 	<string name="Exporting_database">Exporting database&#8230;</string>
-	<string name="Export_done">Export done</string>
+	<string name="Export_done">Exported to %1$s</string>
 	<string name="Export_failed">Export failed</string>
 	<string name="Export_file_not_found">Export file not found</string>
 	<string name="Pick_the_date">Pick the date</string>
 	<string name="Please_define_remoteurl_in_prefs">Please define remoteurl in prefs</string>
 	<string name="Sync_done">Sync done</string>
+	<string name="View">View</string>
+	<string name="Import">Import</string>
+	<string name="Export">Export</string>
+	<string name="Insert_dummies">Insert dummies</string>
+	<string name="Yes">Yes</string>
+	<string name="CsvImportWarningMessage">Purge exisiting and import?</string>
+	<string name="CSV_Import_done">CSV import done</string>
+	<string name="CSV_Import_failed">CSV import failed</string>
 </resources>

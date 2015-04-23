@@ -16,6 +16,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.CoreProtocolPNames;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,7 +24,86 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.util.Log;
+
+class HTTPSyncroniserTask extends AsyncTask<Object, Void, HttpResponse> {
+    @Override
+    protected HttpResponse doInBackground(Object... params) {
+
+    	String remoteUrl = (String)params[0];
+    	HttpPost httppost = (HttpPost)params[1];
+    	
+    	System.out.println("REMOTE URL "+remoteUrl);
+    	
+        HttpClient httpclient = new DefaultHttpClient();
+        httpclient.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "EUsage Android sync client");
+        try
+        {
+        	HttpResponse response = httpclient.execute(httppost);
+        	return response;
+        }
+        catch (ClientProtocolException e) {
+        	System.err.println("ClientProtocolException "+e.getMessage());
+        } 
+        catch( Exception e )
+        {
+        	System.err.println(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(HttpResponse response) {
+        //Do something with result
+        JSONObject json = new JSONObject();
+        HttpEntity entity = response.getEntity();
+        if (entity != null) {
+            // A Simple JSON Response Read
+            try
+            {
+            	InputStream instream = entity.getContent();
+            	String result= HTTPSyncronizer.convertStreamToString(instream);
+            	instream.close();
+
+            	json=new JSONObject(result);
+            	if( json.getString("status").equals("ok") )
+            	{
+            		System.out.println("OK");
+            		return;
+            	}
+            	else
+            	{
+            		throw new HTTPSyncronizerException("Wrong/Missing response status: "+json.getString("status"));
+            	}
+            	
+            }
+            catch( JSONException e )
+            {
+            	//throw new HTTPSyncronizerException(e.getMessage());
+            }
+            catch( Exception e)
+            {
+            	
+            }
+            
+        }
+        
+        System.out.println("Status code: "+response.getStatusLine().getStatusCode());
+        if( response.getStatusLine().getStatusCode() == 200 )
+        {
+        	System.out.println(response.toString());
+        	//msg = "Data send to server!";
+        	return;
+        }
+        else
+        {
+        	System.err.println("HTTP-Error code: "+response.getStatusLine().getStatusCode());
+        	//throw new HTTPSyncronizerException("HTTP-Error code: "+response.getStatusLine().getStatusCode());
+        }
+        return;
+    }
+}
 
 public class HTTPSyncronizer {
 
@@ -31,7 +111,7 @@ public class HTTPSyncronizer {
 	protected Context context;
 
 	private static final String TAG = "HTTPSyncronizer";
-	
+
 	public HTTPSyncronizer( Context context,SQLiteDatabase database )
 	{
 		this.context = context;
@@ -40,7 +120,6 @@ public class HTTPSyncronizer {
 
 	public boolean sync( String remoteUrl ) throws HTTPSyncronizerException
 	{
-		
 		if( !Connectivity.isConnected(context) )
 		{
 			throw new HTTPSyncronizerException("Network not available");
@@ -65,14 +144,11 @@ public class HTTPSyncronizer {
 		{
 			throw new HTTPSyncronizerException(e.getMessage());
 		}
-		
+
 		try {
-
             // Create a new HttpClient and Post Header
-            HttpClient httpclient = new DefaultHttpClient();
+            //HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost(remoteUrl);
-
-            
             if( !remoteUrl.isEmpty() )
             {
                 // Add your data
@@ -80,56 +156,15 @@ public class HTTPSyncronizer {
                 nameValuePairs.add(new BasicNameValuePair("data", jsonList.toString()));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
                 // Execute HTTP Post Request
-                HttpResponse response = httpclient.execute(httppost);
-
-                JSONObject json = new JSONObject();
-                HttpEntity entity = response.getEntity();
-                if (entity != null) {
-                    // A Simple JSON Response Read
-                    InputStream instream = entity.getContent();
-                    String result= convertStreamToString(instream);
-                    instream.close();
-                    try
-                    {
-                    	json=new JSONObject(result);
-                    	if( json.getString("status").equals("ok") )
-                    	{
-                    		return true;
-                    	}
-                    	else
-                    	{
-                    		throw new HTTPSyncronizerException("Wrong/Missing response status: "+json.getString("status"));
-                    	}
-                    	
-                    }
-                    catch( JSONException e )
-                    {
-                    	throw new HTTPSyncronizerException(e.getMessage());
-                    }
-                    
-                }
-                
-                Log.d(TAG,"Status code: "+response.getStatusLine().getStatusCode());
-                
-                if( response.getStatusLine().getStatusCode() == 200 )
-                {
-                	Log.d(TAG,"XX "+response.toString());
-                	//msg = "Data send to server!";
-                	return true;
-                }
-                else
-                {
-                	throw new HTTPSyncronizerException("HTTP-Error code: "+response.getStatusLine().getStatusCode());
-                }
+                new HTTPSyncroniserTask().execute( remoteUrl, httppost );
             }
-
-            
-        } catch (ClientProtocolException e) {
-        	Log.e(TAG, e.getMessage());
-            // TODO Auto-generated catch block
+            else
+            {
+            	return false;
+            }
         } catch (IOException e) {
         	Log.e(TAG, e.getMessage());
-            // TODO Auto-generated catch block
+        	return false;
         }
 
         return true;

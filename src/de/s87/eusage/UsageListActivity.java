@@ -1,13 +1,28 @@
 package de.s87.eusage;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -32,22 +47,30 @@ public class UsageListActivity extends ListActivity {
 	private static final String TAG = "UsageListActivity";
 	private static final String fields[] = { "type", "usage", "cdate", 
         BaseColumns._ID };
-    
+	
 	// usage_val, usage_checkbox
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getWritableDatabase();
-
-        Cursor data = database.query("usage", fields, 
-                null, null, null, null, "cdate DESC");
-    	startManagingCursor(data);
-        dataSource = new UsageListAdapter(this, 
-                R.layout.usagelist, data, fields,
-                new int[] { R.id.usage_type, R.id.usage_val, R.id.usage_cdate, R.id.rowCheckBox });
-        setListAdapter(dataSource);
+        try
+        {
+            Cursor data = database.query("usage", fields, 
+                    null, null, null, null, "cdate DESC");
+        	startManagingCursor(data);
+        	if( data.getCount() > 0 )
+        	{
+        		dataSource = new UsageListAdapter(this, 
+                    R.layout.usagelist, data, fields,
+                    new int[] { R.id.usage_type, R.id.usage_val, R.id.usage_cdate, R.id.rowCheckBox });
+        		setListAdapter(dataSource);
+        	}
+        }
+        catch( Exception e )
+        {
+        	System.err.println(e.getMessage());
+        }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -67,26 +90,40 @@ public class UsageListActivity extends ListActivity {
     	return true;
     }
    
-    protected boolean fillDummies()
+    protected void callCsvImport()
     {
-    	database = dbHelper.getWritableDatabase();
+    	AlertDialog.Builder dBuilder = new AlertDialog.Builder(this);
+    	dBuilder.setMessage(getString(R.string.CsvImportWarningMessage)).
+    			setCancelable(true).
+    			setPositiveButton(getString(R.string.Yes), new DialogInterface.OnClickListener() {
+    		           public void onClick(DialogInterface dialog, int id) {
+    		                System.out.println("Import now");
+    		                ImportCSVTask importer = new ImportCSVTask(UsageListActivity.this);
+    		                importer.execute("");
+    		           } } );
+    	AlertDialog alert = dBuilder.create();
+    	alert.show();
+    }
+    
+    protected boolean fillDummies()
+    {    	
+        ItemModel model = new ItemModel(UsageListActivity.this);
+        
+        Calendar calendar = Calendar.getInstance();
+        Date now = calendar.getTime();
+    	Timestamp ts = new Timestamp(now.getTime());
+
+    	String theTimestamp = Long.toString(ts.getTime());
+
         for( int x=0; x<25; x++)
         {
-        	try
-        	{
-        		database.execSQL("INSERT INTO usage "
-        				+"(type,usage,cdate)" 
-        				+" VALUES ('dummy',"+x+","+new Date().getTime()+")");
-        	}
-        	catch( Exception e )
-        	{
-        		Log.d(TAG,e.getMessage());
-        	}
+        	String usage = ""+(x*500);
+            if( model.addItem("dummy", usage, theTimestamp) )
+            {
+            	System.out.println("Added");
+            }
         }
-        
-        /*Cursor data = database.query("usage", fields, 
-                null, null, null, null, "cdate DESC");
-        dataSource.changeCursor(data);*/
+
     	dataSource.getCursor().requery();
     	dataSource.notifyDataSetChanged();
     	dataSource.notifyDataSetInvalidated();
@@ -98,8 +135,7 @@ public class UsageListActivity extends ListActivity {
     {
     	SparseBooleanArray cbStates = dataSource.getCheckboxStates();
     	database = dbHelper.getWritableDatabase();
-    	
-    	Log.d(TAG,"SO VIELE "+cbStates.size());
+
     	int deleteCount = 0;
     	for( int i=0; i<cbStates.size(); i++ )
     	{
@@ -127,7 +163,7 @@ public class UsageListActivity extends ListActivity {
     	dataSource.notifyDataSetChanged();
     	dataSource.notifyDataSetInvalidated();
     	getListView().invalidate();
-    	
+
     	return true;
     }
     
@@ -143,6 +179,9 @@ public class UsageListActivity extends ListActivity {
                 return true;
             case R.id.fillDummies:
             	fillDummies();
+            	return true;
+            case R.id.csvimport:
+            	callCsvImport();
             	return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -225,8 +264,17 @@ public class UsageListActivity extends ListActivity {
                 String cdate = mCursor.getString(2);
                 String dbId = mCursor.getString(3);
 
-                Date d = new Date(Long.parseLong(cdate));
+                Date d;
                 SimpleDateFormat f = new SimpleDateFormat();
+                try
+                {
+                	d = new Date(Long.parseLong(cdate));
+                }
+                catch( Exception e )
+                {
+                	System.err.println("Error parsing timestamp "+e.getMessage());
+                	d = new Date();
+                }
 
                 viewHolder.dbId = mCursor.getInt(3);
                 viewHolder.type.setText(name);
@@ -251,4 +299,92 @@ public class UsageListActivity extends ListActivity {
         }
     }
 
+	public class ImportCSVTask extends AsyncTask<String, Void, Boolean>
+	{
+
+		private final ProgressDialog dialog = new ProgressDialog( UsageListActivity.this );
+		private Activity activity = null;
+		public File importDir = new File(
+				Environment.getExternalStorageDirectory(), "");
+
+		public ImportCSVTask( Activity activity)
+		{
+			this.activity = activity;
+			
+		}
+
+		@Override
+		protected void onPreExecute()
+		{
+			this.dialog.setMessage(getString(R.string.Exporting_database));
+			this.dialog.show();
+		}
+
+		protected Boolean doInBackground(final String... args)
+		{
+
+			if (!importDir.exists())
+			{
+				System.err.println("Import dir does not exist.");
+				return false;
+			}
+
+	        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+	        String importFilename = prefs.getString("csvFilename",null);
+			
+			File file = new File(importDir, importFilename);
+			
+			try
+			{
+				FileReader reader = new FileReader(file);
+				BufferedReader br = new BufferedReader(reader);
+				String cvsSplitBy = ",";
+				String line;
+				ItemModel model = new ItemModel( UsageListActivity.this );
+				model.purgeAll();
+				while((line = br.readLine()) != null) {
+					String[] vals = line.split(cvsSplitBy); // 0 = id, 1=type, 2=val, 3=ts
+					for( int x=0; x<vals.length; x++ )
+					{
+						vals[x] = vals[x].replace("\"", "");
+					}
+					model.addItem(vals[1], vals[2], vals[3]);
+				}
+				br.close();
+				reader.close();
+
+				return true;
+			}
+			catch (SQLException sqlEx)
+			{
+				Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
+				return false;
+			}
+			catch (IOException e)
+			{
+				Log.e("MainActivity", e.getMessage(), e);
+				return false;
+			}
+		}
+
+		protected void onPostExecute(final Boolean success)
+		{
+			if (this.dialog.isShowing())
+				this.dialog.dismiss();
+
+			if (success)
+			{
+				Toast.makeText(UsageListActivity.this,
+								getString(R.string.CSV_Import_done),
+								Toast.LENGTH_SHORT).show();
+				this.activity.recreate();
+			}
+			else
+			{
+				Toast.makeText(UsageListActivity.this,
+								getString(R.string.CSV_Import_failed),
+								Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
 }

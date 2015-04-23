@@ -4,5 +4,6 @@
           android:title="@string/selectAll"/>
     <item android:id="@+id/deleteSelected"
           android:title="@string/deleteSelected" />
-    <item android:id="@+id/fillDummies" android:title="Insert dummies" android:visible="false"></item>
+    <item android:id="@+id/fillDummies" android:title="@string/Insert_dummies" android:visible="false"></item>
+    <item android:id="@+id/csvimport" android:title="@string/Import" android:visible="true"></item>
 </menu>

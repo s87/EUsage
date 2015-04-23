@@ -14,6 +14,11 @@
                 android:defaultValue="false"
                 android:summary="Sync after click on save button"
                 android:key="syncOnSave" />
-
         </PreferenceCategory>
+        <EditTextPreference
+                android:name="csvFilename"
+                android:summary="Name of export/import file"
+                android:defaultValue="eusage.csv"
+                android:title="CSV Filename"
+                android:key="csvFilename" />
 </PreferenceScreen>

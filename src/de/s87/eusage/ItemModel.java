@@ -1,25 +1,54 @@
 package de.s87.eusage;
 
-import android.R.integer;
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
+import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 public class ItemModel {
 
 	DatabaseHelper dbHelper;
 	SQLiteDatabase database;
-
+	Activity activity;
+	
 	public ItemModel( Activity activity )
 	{
+		this.activity = activity;
 		this.dbHelper = new DatabaseHelper( activity );
 		this.database = dbHelper.getReadableDatabase();
 	}
 	
 	protected boolean autoSync()
 	{
-		// @todo implement this
+		Context activityContext = activity.getApplicationContext();
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activityContext);
+        Boolean autoSync = prefs.getBoolean("syncOnSave", false);
+        if( autoSync )
+        {
+        	String remoteSyncUrl=prefs.getString("httpupdateurl","");
+        	if( !remoteSyncUrl.isEmpty() &&
+        			!remoteSyncUrl.equals("http://") )
+        	{
+        		try
+        		{
+        			HTTPSyncronizer syncer = new HTTPSyncronizer( activityContext, database );
+        			System.out.println("remoteSyncUrl "+remoteSyncUrl);
+            		if( syncer.sync(remoteSyncUrl) )
+            		{
+            			Toast.makeText(activityContext, "Sync done", Toast.LENGTH_LONG).show();
+            			return true;
+            		}
+        		}
+        		catch( HTTPSyncronizerException e )
+        		{
+        			Toast.makeText(activityContext, e.getMessage(), Toast.LENGTH_LONG).show();
+        		}
+        	}
+        }
+
 		return false;
 	}
 	
@@ -27,7 +56,6 @@ public class ItemModel {
 	{
         try
         {
-        	System.err.println("REMOVING ALL ITEMS");
         	database.execSQL("DELETE FROM usage WHERE 1");
         	return true;
         }

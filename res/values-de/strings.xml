@@ -18,10 +18,18 @@
     <string name="syncurl_label">Sync URL</string>
     <string name="csvExport">CSV Export</string>
     <string name="Exporting_database">Exportiere Datenbank&#8230;</string>
-	<string name="Export_done">Export fertig</string>
+	<string name="Export_done">Export nach %1$s fertig</string>
 	<string name="Export_failed">Export fehlgeschlagen</string>
 	<string name="Export_file_not_found">Export Datei nicht gefunden</string>
 	<string name="Pick_the_date">Zeitpunkt des Eintrages</string>
 	<string name="Please_define_remoteurl_in_prefs">Please define remoteurl in prefs</string>
 	<string name="Sync_done">Synchronisation fertig</string>
+    <string name="View">Anzeigen</string>
+    <string name="Import">Importieren</string>
+    <string name="Export">Exportieren</string>
+    <string name="Insert_dummies">Dummies einfügen</string>
+    <string name="Yes">Ja</string>
+    <string name="CsvImportWarningMessage">Existierende löschen und Importieren?</string>
+    <string name="CSV_Import_done">CSV Import fertig</string>
+    <string name="CSV_Import_failed">CSV Import fehlgeschlagen</string>
 </resources>
