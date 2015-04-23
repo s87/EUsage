@@ -32,4 +32,6 @@
     <string name="CsvImportWarningMessage">Existierende löschen und Importieren?</string>
     <string name="CSV_Import_done">CSV Import fertig</string>
     <string name="CSV_Import_failed">CSV Import fehlgeschlagen</string>
+    <string name="stats">Statistik</string>
+    <string name="Usage_calculated_by_day">Verbrauch pro Tag</string>
 </resources>

@@ -32,4 +32,7 @@
 	<string name="CsvImportWarningMessage">Purge exisiting and import?</string>
 	<string name="CSV_Import_done">CSV import done</string>
 	<string name="CSV_Import_failed">CSV import failed</string>
+	<string name="stats">Statistics</string>
+	<string name="Usage_calculated_by_day">Usage calculated byday</string>
+	
 </resources>

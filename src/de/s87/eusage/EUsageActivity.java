@@ -116,13 +116,14 @@ public class EUsageActivity extends Activity {
         }
     };
 
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
         return true;
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
@@ -144,6 +145,9 @@ public class EUsageActivity extends Activity {
                 Intent settingsActivity = new Intent(getBaseContext(),
                         Preferences.class);
                 startActivity(settingsActivity);
+                return true;
+            case R.id.statistics:
+                startActivity(new Intent(getBaseContext(), StatisticsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
