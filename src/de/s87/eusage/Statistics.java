@@ -1,11 +1,8 @@
 package de.s87.eusage;
 
-import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import android.app.Activity;
 import android.database.Cursor;
@@ -33,15 +30,10 @@ public class Statistics {
 		return null;
 	}
 	
-	public String[] getUsageTypes()
+	public Iterator<String> getUsageTypes()
 	{
 		this.refresh();
-		String[] arr1 = new String[typeList.size()];
-		Object[] keys = typeList.keySet().toArray();
-        for(int i=0;i<keys.length;i++) {
-        	arr1[i] = (String)keys[i];
-        }
-        return arr1;
+		return typeList.keySet().iterator();
 	}
 
 	public void refresh()

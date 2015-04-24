@@ -1,6 +1,7 @@
 package de.s87.eusage;
 
 import java.text.DecimalFormat;
+import java.util.Iterator;
 
 import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
@@ -44,19 +45,21 @@ public class StatisticsActivity extends Activity {
         tbrow0.addView(tv1);
         stk.addView(tbrow0);
         
-        String[] types = stats.getUsageTypes();
-        for( int i=0; i < types.length; i++ )
+        //String[] types = stats.getUsageTypes();
+        Iterator<String> types = stats.getUsageTypes();
+        while( types.hasNext() )
         {
+        	String typeId = types.next();
         	TableRow row = new TableRow(this);
         	row.setLayoutParams(rowParams);
         	TextView type = new TextView(this);
-        	type.setText( types[i] );
+        	type.setText( typeId );
         	type.setLayoutParams(itemParams);
         	row.addView(type);
         	
         	TextView usageText = new TextView(this);
         	
-        	Double usageVal = stats.getUsageForType(types[i]).getUsageForDay();
+        	Double usageVal = stats.getUsageForType(typeId).getUsageForDay();
         	DecimalFormat f = new DecimalFormat("####.##");
         	usageText.setText( f.format(usageVal) );
         	usageText.setLayoutParams(itemParams);
